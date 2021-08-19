@@ -13,7 +13,7 @@ require_once 'simple_table.php';
  * Typically you create the connection once, e.g. at login/auth and use it 
  * throughout the processing of the request to a response.
  */
-$ds = new PDODataSource("presidentDB");
+$ds = new PDODataSource("presidents");
 $conn = $ds->getConnection();
 
 

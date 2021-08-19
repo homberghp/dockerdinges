@@ -1,0 +1,19 @@
+version : "3.9"
+services:
+    web:
+        image: "socke77/prj1_apache"
+        ports:
+            - "8080:80"
+        volumes:
+            - .:/var/www
+        depends_on: 
+            - db  
+    db:
+        image: "postgres:13.4"
+        volumes: 
+            - ./pg_data:/docker-entrypoint-initdb.d
+        environment:
+            - POSTGRES_USER=exam
+            - POSTGRES_PASSWORD=exam
+        ports:
+            - "5433:5432"

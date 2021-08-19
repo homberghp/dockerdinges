@@ -1,4 +1,7 @@
 <?php
+/**
+ * @author Pieter van den Hombergh {@code <pieter.van.den.hombergh@gmail.com>}
+ */
 require_once 'configure.php';
 /**
  * Put lib outside web directory, so that the files cannot be read by pointing at them using the browser.
@@ -13,7 +16,7 @@ require_once 'simple_table.php';
  * Typically you create the connection once, e.g. at login/auth time and use it 
  * throughout the processing of the request to a response.
  */
-$ds = (new PDODataSource("presidentDB"))->setHost('prj1_postgres');
+$ds = (new PDODataSource("presidents"))->setHost('db');
 $conn = $ds->getConnection();
 
 
@@ -46,6 +49,6 @@ SQL;
         </style>
     </head>
     <body>
-        <?php print_simple_table($conn, $sql, ['NEW YORK', 'DEMOCRATIC']); ?>
+        <?php print_simple_table($conn, $sql, ['TEXAS', 'DEMOCRATIC']); ?>
     </body>
 </html>
