@@ -1,3 +1,5 @@
+create database hotel_california;
+\c hotel_california
 /*
  * database schema for transaction demo
  */
