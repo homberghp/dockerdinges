@@ -13,7 +13,7 @@ services:
         volumes: 
             - ./pg_data:/docker-entrypoint-initdb.d
         environment:
-            - POSTGRES_USER=exam
-            - POSTGRES_PASSWORD=exam
+            - POSTGRES_USER=${POSTGRES_USER}
+            - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
         ports:
             - "5433:5432"

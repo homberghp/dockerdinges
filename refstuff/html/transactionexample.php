@@ -9,7 +9,7 @@ require_once 'simple_table.php';
 /**
  * Typically you create the connection once, and use it throughout the processing of the request to a response.
  */
-$ds = (new PDODataSource("fontys_hotel"))->setHost('prj1_postgres');
+$ds = (new PDODataSource("hotel_california"))->setHost('db');
 $conn = $ds->getConnection();
 
 $queryText1 = <<<'SQL'

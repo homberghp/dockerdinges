@@ -49,6 +49,9 @@ SQL;
         </style>
     </head>
     <body>
+        <h1>My Ugly demo pages</h1>
         <?php print_simple_table($conn, $sql, ['TEXAS', 'DEMOCRATIC']); ?>
+
+        <h2>Try web page <a href='reservation.php'>hotel california reservation</a> too</h2>
     </body>
 </html>
