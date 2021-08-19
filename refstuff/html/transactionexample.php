@@ -85,6 +85,7 @@ $a = ['date_from' => $dates[0],
         <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
     </head>
     <body>
+        <h1>My Ugly transaction stats page</h1>
 <?php
 print_simple_table($conn, "select * from customers order by 1", []);
 
