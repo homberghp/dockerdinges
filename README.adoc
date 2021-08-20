@@ -1,0 +1,22 @@
+= Docker examples
+
+== refstuff contains a working example
+
+refstuff defines two containers, named db and web.
+The containers are configured with a docker-compose.yml file
+
+The yml file uses one secret that is taken form the [red]`.env` file
+which is NOT present in the repo for obvious reasons.
+
+The .env file should contain one line declaring the PG_PASSWORD key
+
+[source,sh]
+----
+PG_PASSWORD=changeme
+----
+
+
+DO NOT add/commit this .env file, but rather ignore it in the .gitignore file.
+
+You should of course change the password to a better value that you keep to your selves.
+You only need it on your machine.

@@ -1,2 +1,0 @@
-# dockerdinges
-docker playground
