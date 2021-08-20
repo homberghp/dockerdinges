@@ -41,16 +41,11 @@ SQL;
 <html>
 
     <head lang='en'>
-        <style type='text/css'>
-            .num{text-align: right;}
-            .simple-table {border-width:1px;border-collapse:collapse}
-            tr:nth-child(even) {background: rgba(255,255,255,0.3)}
-            tr:nth-child(odd) {background: rgba(192,192,255,0.3)}
-        </style>
+        <link rel="stylesheet" type="text/css" href="css/style.css" />
     </head>
     <body>
         <h1>My Ugly demo pages</h1>
-        <?php print_simple_table($conn, $sql, ['TEXAS', 'DEMOCRATIC']); ?>
+        <?php print_simple_table($conn, $sql, ['TEXAS', 'DEMOCRATIC'], 'Democrats form TEXAS'); ?>
 
         <h2>Try web page <a href='reservation.php'>hotel california reservation</a> too</h2>
     </body>

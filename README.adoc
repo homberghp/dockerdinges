@@ -1,4 +1,5 @@
 = Docker examples
+include::commonhead.adoc[]
 
 
 == Prepare apache+php+pg image
@@ -40,3 +41,67 @@ DO NOT add/commit this .env file, but rather ignore it in the .gitignore file.
 
 You should of course change the password to a better value that you keep to your selves.
 You only need it on your machine.
+
+== Using a database with PHP PDO style
+
+The database handling style in these examples is modeled after java JDBC.
+
+We use PHP/PDO as the basis and added two classes that make PDO behave almost the same as JDBC,
+in particular regarding how to get a _named_ data source, without having to deal with database credentials in all source files.
+
+The datasource (lib/PDODataSource.php) picks up the database settings from a file `etc/db_settings.php` outside the web-root.
+
+
+=== Simple select with constant query expression
+.Simple usage, select
+[source,sql]
+----
+$sql = <<<'SQL'
+select  pres.id as pres_id,
+        pres.name as pres_name,
+        years_served,
+        party,
+        state.name as state_name,
+        year_entered
+    from  president  pres
+    join state on(state_id_born=state.id)
+    where state.name=? and pres.party=?
+SQL;
+$ds = (new PDODataSource("presidents"))->setHost('db'); //<1>
+$conn = $ds->getConnection();
+$stmt = $conn->prepare($sql); //<2>
+while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
+    printRow($row, $colAlign, $columnCount); //<3>
+}
+----
+
+<1> Only name the database and optionally the host, if it is not localhost.
+<2> Always use a prepared statement.
+<3> printRow is a simple method, left as an exercise.
+
+The sql code above uses single or *strong* quotes. The string inside strong quotes
+is not interpolated (or substituted), so this avoids picking up variables and implicitly avoids
+sql injections, because strong quotes are not prone to injection (or substitution).
+
+
+=== Select with parameters
+
+.sql query text
+[source,sql]
+----
+$queryText1 = <<<'SQL'
+with inp as ( select ?::date start_reservation,?::date end_reservation, ?::integer as item_id, ?::integer as customer_id ), -- <1>
+  res as ( select start_reservation cstart_reservation, greatest(start_reservation+1,end_reservation) cend_reservation from inp), -- <2>
+  cost as (select item_cost_per_day*(cend_reservation - cstart_reservation) rcost from res,rental_items join inp on (inp.item_id=rental_items.item_id)) -- <3>
+insert into reservations (during, item_id, for_customer,reservation_cost)
+       select daterange(cstart_reservation,cend_reservation), item_id, customer_id, rcost -- <4>
+       from inp,res,cost
+SQL;
+----
+
+<1> start by making the parameters meaningful
+<2> make sure the reservation is at least for one day, meaning distance between start and end is 1.
+   note the use of the greatest function, max is reserved for max in columns (vertically), greatest selects max in row (horizontally).
+  The expression makes sure that at least one day has to be payed for.
+<3> use corrected range and cost per item for item table to compute total cost.
+<4> use the computed/corrected values to store.

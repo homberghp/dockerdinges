@@ -9,7 +9,7 @@
  * @param string $queryText the sql code
  * @param array $queryParams params to the prepared statement.
  */
-function print_simple_table(PDO $conn, string $queryText, array $queryParams, string $tabledef = "<table border=1 class='simple-table'>\n") {
+function print_simple_table(PDO $conn, string $queryText, array $queryParams, string $caption='undefined' ,string $tabledef = "<table border=1 class='simple-table'>\n") {
     try {
         $stmt = $conn->prepare($queryText);
 
@@ -18,6 +18,7 @@ function print_simple_table(PDO $conn, string $queryText, array $queryParams, st
         // process the result
         //<editor-fold>
         echo $tabledef;
+        echo "<caption>{$caption}</caption>";
         $columnCount = $stmt->columnCount();
         $header1 = "";
         $header2 = "";

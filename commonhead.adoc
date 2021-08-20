@@ -1,0 +1,17 @@
+= {doctitle}
+:author:  Pieter van den Hombergh
+:version: V1.0  2021-08-20
+:toc: right
+:toclevels: 4
+:icons: font
+:docinfo: shared
+:keywords: Docker docker-compose best practices
+:source-highlighter: highlightjs
+:highlightjs-theme: agate
+:highlightjs-linenums-mode: inline
+:linkattrs: true
+:stem: latexmath
+
+toc::[]
+
+:numbered:

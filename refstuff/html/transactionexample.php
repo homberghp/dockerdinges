@@ -13,15 +13,21 @@ $ds = (new PDODataSource("hotel_california"))->setHost('db');
 $conn = $ds->getConnection();
 
 $queryText1 = <<<'SQL'
-insert into reservations (during, item_id, for_customer,reservation_cost) values(daterange(?,?),?,?,?)
+with inp as ( select ?::date start_reservation,?::date end_reservation, ?::integer as item_id, ?::integer as customer_id ),
+  res as ( select start_reservation cstart_reservation, greatest(start_reservation+1,end_reservation) cend_reservation from inp),
+  cost as (select item_cost_per_day*(cend_reservation - cstart_reservation) rcost from res,rental_items join inp on (inp.item_id=rental_items.item_id))
+insert into reservations (during, item_id, for_customer,reservation_cost) 
+       select daterange(cstart_reservation,cend_reservation), item_id, customer_id, rcost 
+       from inp,res,cost
 SQL;
+
 $queryText2 = <<<'SQL'
 update customers set credit=credit-? where customer_id=?
 SQL;
 // prints out current bill
 $queryText3 = <<<'SQL'
-select * from reservations r join customers c on(c.customer_id=r.for_customer) 
-    where c.customer_id=? 
+select * from reservations r join customers c on(c.customer_id=r.for_customer)
+    where c.customer_id=?
     order by 1
 SQL;
 
@@ -42,7 +48,7 @@ function makeReservation(PDO $conn, array $reservationParams) {
             $reservationParams['date_to'],
             $reservationParams['item'],
             $reservationParams['account'],
-            $reservationParams['total_cost'],
+            // $reservationParams['total_cost'],
         ]);
         $stmt2 = $conn->prepare($queryText2);
         $stmt2->execute([
@@ -51,14 +57,16 @@ function makeReservation(PDO $conn, array $reservationParams) {
         ]);
         $conn->commit();
         //echo "<pre>$queryText2</pre>";
-        print_simple_table($conn, $queryText3, [$reservationParams['account']]);
+        print_simple_table($conn, $queryText3, [$reservationParams['account']], 'transactions');
     } catch (PDOException $ex) {
-        echo "transaction failed with<pre style='color:#800;font-weight:bold'>" . $ex->getMessage() . "</pre>";
+        echo "<div class='errors'><h3 >transaction failed with</h3>
+              <pre >" . $ex->getMessage() . "</pre>
+             </div>";
         $conn->rollBack();
     }
 }
 
-//phpinfo(INFO_VARIABLES);
+// phpinfo(INFO_VARIABLES);
 $dates =preg_split("/\s\-\s/",$_POST['dates']);
 $item= filter_input(INPUT_POST,'item',FILTER_SANITIZE_NUMBER_INT);
 $customer= filter_input(INPUT_POST,'customer',FILTER_SANITIZE_NUMBER_INT);
@@ -73,29 +81,25 @@ $a = ['date_from' => $dates[0],
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>Simple Hotel Reservations</title><style type='text/css'>
-            .num{text-align: right;}
-            .simple-table {border-width:1px;border-collapse:collapse}
-            tr:nth-child(even) {background: rgba(255,255,255,0.3)}
-            tr:nth-child(odd) {background: rgba(192,192,255,0.3)}
-        </style>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
         <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
         <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+        <link rel="stylesheet" type="text/css" href="css/style.css" />
     </head>
     <body>
         <h1>My Ugly transaction stats page</h1>
 <?php
-print_simple_table($conn, "select * from customers order by 1", []);
+print_simple_table($conn, "select * from customers order by 1", [], 'customers');
 
 makeReservation($conn, $a);
 //echo "<pre>$queryText3</pre>";
 $queryText4 = <<<'SQL'
 select * from reservations r join customers c on(c.customer_id=r.for_customer) join  rental_items using(item_id)
-    order by 1
+    order by 2 desc
 SQL;
-print_simple_table($conn, $queryText4, []);
+print_simple_table($conn, $queryText4, [],'reservations');
 ?>
+<a href='reservation.php'> back to reservations</a>
 </body>
 </html>

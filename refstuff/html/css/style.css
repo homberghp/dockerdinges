@@ -1,0 +1,20 @@
+.num {
+    text-align: right;
+}
+caption { background-color: #aaa; 
+}
+.simple-table {
+    border-width:1px;
+    border-collapse:collapse
+}
+tr:nth-child(even) {
+    background: rgba(255,255,255,0.3)
+}
+tr:nth-child(odd) {
+    background: rgba(192,192,255,0.3)
+}
+.errors { 
+    background-color:pink; 
+
+    font-weight: 700;
+}
