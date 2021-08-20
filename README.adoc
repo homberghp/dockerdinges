@@ -146,12 +146,16 @@ function makeReservation(PDO $conn, array $reservationParams) {
             $reservationParams['item'],
             $reservationParams['account'],
         ]);
+        $row = $stmt1->fetch(PDO::FETCH_ASSOC);
+        $totalCost=$row['reservation_cost'];
+
         $stmt2 = $conn->prepare($queryText2);
         $stmt2->execute([
-            $reservationParams['total_cost'],
+            $totalCost,
             $reservationParams['account']
         ]);
         $conn->commit();
+        //echo "<pre>$queryText2</pre>";
         print_simple_table($conn, $queryText3, [$reservationParams['account']], 'transactions');
     } catch (PDOException $ex) {
         echo "<div class='errors'><h3 >transaction failed with</h3>
