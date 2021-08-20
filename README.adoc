@@ -90,12 +90,26 @@ sql injections, because strong quotes are not prone to injection (or substitutio
 [source,sql]
 ----
 $queryText1 = <<<'SQL'
-with inp as ( select ?::date start_reservation,?::date end_reservation, ?::integer as item_id, ?::integer as customer_id ), -- <1>
-  res as ( select start_reservation cstart_reservation, greatest(start_reservation+1,end_reservation) cend_reservation from inp), -- <2>
-  cost as (select item_cost_per_day*(cend_reservation - cstart_reservation) rcost from res,rental_items join inp on (inp.item_id=rental_items.item_id)) -- <3>
-insert into reservations (during, item_id, for_customer,reservation_cost)
-       select daterange(cstart_reservation,cend_reservation), item_id, customer_id, rcost -- <4>
-       from inp,res,cost
+with inp as (
+         select ?::date start_reservation,?::date end_reservation, ?::integer as item_id, ?::integer as customer_id
+     ),
+     validres as (
+         select start_reservation cstart_reservation, greatest(start_reservation+1,end_reservation) cend_reservation
+          from inp
+     ),
+     cost as (
+          select item_cost_per_day*(cend_reservation - cstart_reservation) rcost
+          from validres,rental_items join inp on (inp.item_id=rental_items.item_id)
+     ),
+     makeres as (
+          insert into reservations (during, item_id, for_customer,reservation_cost)
+          select daterange(cstart_reservation,cend_reservation), item_id, customer_id, rcost
+          from inp,validres,cost
+          returning  *
+  )
+  -- final update to customer credit
+  update customers set credit=credit-(select reservation_cost from makeres) where customer_id=customer_id
+    returning *
 SQL;
 ----
 

@@ -12,14 +12,27 @@ require_once 'simple_table.php';
 $ds = (new PDODataSource("hotel_california"))->setHost('db');
 $conn = $ds->getConnection();
 
-$queryText1 = <<<'SQL'
-with inp as ( select ?::date start_reservation,?::date end_reservation, ?::integer as item_id, ?::integer as customer_id ),
-  res as ( select start_reservation cstart_reservation, greatest(start_reservation+1,end_reservation) cend_reservation from inp),
-  cost as (select item_cost_per_day*(cend_reservation - cstart_reservation) rcost from res,rental_items join inp on (inp.item_id=rental_items.item_id))
-insert into reservations (during, item_id, for_customer,reservation_cost)
-       select daterange(cstart_reservation,cend_reservation), item_id, customer_id, rcost
-       from inp,res,cost
-       returning  *
+$makeReservationQuery = <<<'SQL'
+with inp as ( 
+         select ?::date start_reservation,?::date end_reservation, ?::integer as item_id, ?::integer as customer_id 
+     ),
+     validres as ( 
+         select start_reservation cstart_reservation, greatest(start_reservation+1,end_reservation) cend_reservation 
+          from inp
+     ),
+     cost as (
+          select item_cost_per_day*(cend_reservation - cstart_reservation) rcost 
+          from validres,rental_items join inp on (inp.item_id=rental_items.item_id)
+     ),
+     makeres as ( 
+          insert into reservations (during, item_id, for_customer,reservation_cost)
+          select daterange(cstart_reservation,cend_reservation), item_id, customer_id, rcost
+          from inp,validres,cost
+          returning  *
+  )
+  -- final update to customer credit
+  update customers set credit=credit-(select reservation_cost from makeres) where customer_id=(select customer_id  from inp)
+       returning *
 SQL;
 
 $queryText2 = <<<'SQL'
@@ -39,30 +52,21 @@ SQL;
  * @param array $reservationParams
  */
 function makeReservation(PDO $conn, array $reservationParams) {
-    global $queryText1, $queryText2, $queryText3;
+    global $makeReservationQuery, $queryText2, $queryText3;
     try {
         $conn->beginTransaction();
         //echo "<pre>$queryText1</pre>";
-        $stmt1 = $conn->prepare($queryText1);
+        $stmt = $conn->prepare($makeReservationQuery);
 
-        $stmt1->execute([
+        $stmt->execute([
             $reservationParams['date_from'],
             $reservationParams['date_to'],
             $reservationParams['item'],
             $reservationParams['account'],
         ]);
-        $row = $stmt1->fetch(PDO::FETCH_ASSOC);
-        $totalCost=$row['reservation_cost'];
 
-        // printResultset($stmt1);
-
-        $stmt2 = $conn->prepare($queryText2);
-        $stmt2->execute([
-            $totalCost,
-            $reservationParams['account']
-        ]);
+        printResultset($stmt, 'updated customer record');
         $conn->commit();
-        //echo "<pre>$queryText2</pre>";
         print_simple_table($conn, $queryText3, [$reservationParams['account']], 'transactions');
     } catch (PDOException $ex) {
         echo "<div class='errors'><h3 >transaction failed with</h3>
