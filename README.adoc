@@ -1,5 +1,25 @@
 = Docker examples
 
+
+== Prepare apache+php+pg image
+
+php8pg contains the stuff to create an image containing apache, php 8 and the things needed
+to connect to a postgres database.
+
+In there run `docker build -t "php8pg"`.
+An initial run may take a while, because some stuff has to be compile.
+
+To test it, spin it up with `docker run -d --name=php8pg_test -p "18080:80" php8pg `.
+
+You will use this image later on, but typically do not have configure it any further.
+
+Point your browser at http://localhost:18080, and you should see the php configuration.
+
+When satisfied with the result, spin the *container* down with `docker stop php8pg_test` and remove it with `docker rm php8pg_test`.
+
+You need the *image*, not the container.
+
+
 == refstuff contains a working example
 
 refstuff defines two containers, named db and web.

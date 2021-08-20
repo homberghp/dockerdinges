@@ -2,7 +2,7 @@ version : "3.9"
 
 services:
     web:
-        image: "socke77/prj1_apache"
+        image: "php8pg"
         ports:
             - "8080:80"
         volumes:

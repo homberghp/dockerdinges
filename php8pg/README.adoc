@@ -1,0 +1,9 @@
+= Image php8pg
+
+
+php8pg is derived from *php:8.0.9-apache* and add the required postgres  stuff to it.
+
+It also install the postgres client so you can test from the containers derived from this Image
+whether the database is reachable.
+
+ 
