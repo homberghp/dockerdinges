@@ -105,3 +105,59 @@ SQL;
   The expression makes sure that at least one day has to be payed for.
 <3> use corrected range and cost per item for item table to compute total cost.
 <4> use the computed/corrected values to store.
+
+.input sanitation and function call
+[source,php]
+----
+$dates =preg_split("/\s\-\s/",$_POST['dates']);
+$regex_filter=['options' =>[ 'regexp'=> '/^\d{4}-\d{2}-\d{2}/']];
+$start_date = filter_var($dates[0], FILTER_VALIDATE_REGEXP, $regex_filter);
+$end_date   = filter_var($dates[1], FILTER_VALIDATE_REGEXP, $regex_filter);
+$item= filter_input(INPUT_POST,'item',FILTER_SANITIZE_NUMBER_INT);
+$customer= filter_input(INPUT_POST,'customer',FILTER_SANITIZE_NUMBER_INT);
+$arguments = ['date_from' => $dates[0],
+    'date_to' => $dates[1],
+    'item' => $item,
+    'account' => $customer];
+
+makeReservation($con, $arguments );
+----
+
+
+.transactional make a reservation
+[source,php]
+----
+/**
+ * Make a reservation. At least two tables are involved, the credits table and the resource (what to reserve) table.
+ * Remember that in php, an array is also a hashmap with key,value pairs
+ * @param PDOConnection $conn
+ * @param array $reservationParams
+ */
+function makeReservation(PDO $conn, array $reservationParams) {
+    global $queryText1, $queryText2, $queryText3;
+    try {
+        $conn->beginTransaction();
+        //echo "<pre>$queryText1</pre>";
+        $stmt1 = $conn->prepare($queryText1);
+
+        $stmt1->execute([
+            $reservationParams['date_from'],
+            $reservationParams['date_to'],
+            $reservationParams['item'],
+            $reservationParams['account'],
+        ]);
+        $stmt2 = $conn->prepare($queryText2);
+        $stmt2->execute([
+            $reservationParams['total_cost'],
+            $reservationParams['account']
+        ]);
+        $conn->commit();
+        print_simple_table($conn, $queryText3, [$reservationParams['account']], 'transactions');
+    } catch (PDOException $ex) {
+        echo "<div class='errors'><h3 >transaction failed with</h3>
+              <pre >" . $ex->getMessage() . "</pre>
+             </div>";
+        $conn->rollBack();
+    }
+}
+----

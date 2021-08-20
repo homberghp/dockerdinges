@@ -16,9 +16,10 @@ $queryText1 = <<<'SQL'
 with inp as ( select ?::date start_reservation,?::date end_reservation, ?::integer as item_id, ?::integer as customer_id ),
   res as ( select start_reservation cstart_reservation, greatest(start_reservation+1,end_reservation) cend_reservation from inp),
   cost as (select item_cost_per_day*(cend_reservation - cstart_reservation) rcost from res,rental_items join inp on (inp.item_id=rental_items.item_id))
-insert into reservations (during, item_id, for_customer,reservation_cost) 
-       select daterange(cstart_reservation,cend_reservation), item_id, customer_id, rcost 
+insert into reservations (during, item_id, for_customer,reservation_cost)
+       select daterange(cstart_reservation,cend_reservation), item_id, customer_id, rcost
        from inp,res,cost
+       returning  *
 SQL;
 
 $queryText2 = <<<'SQL'
@@ -33,6 +34,7 @@ SQL;
 
 /**
  * Make a reservation. At least two tables are involved, the credits table and the resource (what to reserve) table.
+ * Remember that in php, an array is also a hashmap with key,value pairs
  * @param PDOConnection $conn
  * @param array $reservationParams
  */
@@ -48,8 +50,9 @@ function makeReservation(PDO $conn, array $reservationParams) {
             $reservationParams['date_to'],
             $reservationParams['item'],
             $reservationParams['account'],
-            // $reservationParams['total_cost'],
         ]);
+        printResultset($stmt1);
+
         $stmt2 = $conn->prepare($queryText2);
         $stmt2->execute([
             $reservationParams['total_cost'],
@@ -68,13 +71,11 @@ function makeReservation(PDO $conn, array $reservationParams) {
 
 // phpinfo(INFO_VARIABLES);
 $dates =preg_split("/\s\-\s/",$_POST['dates']);
+$regex_filter=['options' =>[ 'regexp'=> '/^\d{4}-\d{2}-\d{2}/']];
+$start_date = filter_var($dates[0], FILTER_VALIDATE_REGEXP, $regex_filter);
+$end_date   = filter_var($dates[1], FILTER_VALIDATE_REGEXP, $regex_filter);
 $item= filter_input(INPUT_POST,'item',FILTER_SANITIZE_NUMBER_INT);
 $customer= filter_input(INPUT_POST,'customer',FILTER_SANITIZE_NUMBER_INT);
-$a = ['date_from' => $dates[0],
-    'date_to' => $dates[1],
-    'item' => $item,
-    'total_cost' => 2 * 5.0,
-    'account' => $customer];
 
 ?>
 <!DOCTYPE html>
@@ -92,7 +93,8 @@ $a = ['date_from' => $dates[0],
 <?php
 print_simple_table($conn, "select * from customers order by 1", [], 'customers');
 
-makeReservation($conn, $a);
+makeReservation($conn, ['date_from' => $start_date,
+'date_to' => $end_date, 'item' => $item, 'account' => $customer]);
 //echo "<pre>$queryText3</pre>";
 $queryText4 = <<<'SQL'
 select * from reservations r join customers c on(c.customer_id=r.for_customer) join  rental_items using(item_id)
