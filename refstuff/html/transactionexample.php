@@ -51,11 +51,14 @@ function makeReservation(PDO $conn, array $reservationParams) {
             $reservationParams['item'],
             $reservationParams['account'],
         ]);
-        printResultset($stmt1);
+        $row = $stmt1->fetch(PDO::FETCH_ASSOC);
+        $totalCost=$row['reservation_cost'];
+
+        // printResultset($stmt1);
 
         $stmt2 = $conn->prepare($queryText2);
         $stmt2->execute([
-            $reservationParams['total_cost'],
+            $totalCost,
             $reservationParams['account']
         ]);
         $conn->commit();

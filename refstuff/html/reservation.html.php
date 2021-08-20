@@ -16,10 +16,11 @@
         print_simple_table($con, "select * from rental_items order by 2", [],'items');
         //echo "<pre>$queryText3</pre>";
         $queryText4 = <<<'SQL'
-        select * from reservations r join customers c on(c.customer_id=r.for_customer) join  rental_items using(item_id)
+        select r.*,c.customer_name,c.customer_email,ri.* from reservations r 
+        join customers c on(c.customer_id=r.for_customer) join  rental_items ri using(item_id)
         order by 2 desc
         SQL;
-        print_simple_table($con, $queryText4, [],'reservations');
+        print_simple_table($con, $queryText4, [],'customer and reservations ');
 
         ?>
         <form action="transactionexample.php" method="post"><span>For customer
