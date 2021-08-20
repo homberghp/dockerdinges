@@ -1,4 +1,5 @@
 version : "3.9"
+
 services:
     web:
         image: "socke77/prj1_apache"
@@ -13,7 +14,6 @@ services:
         volumes: 
             - ./pg_data:/docker-entrypoint-initdb.d
         environment:
-            - POSTGRES_USER=exam
-            - POSTGRES_PASSWORD=exam
+            - POSTGRES_PASSWORD=${PG_PASSWORD}
         ports:
             - "5433:5432"
