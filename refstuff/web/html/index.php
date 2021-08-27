@@ -6,7 +6,7 @@ require_once 'configure.php';
 /**
  * Put lib outside web directory, so that the files cannot be read by pointing at them using the browser.
  * The connection configuration parameters are NOT part of the application source code tree, 
- * although they are contained a simple php file, but 
+ * although they are contained in a simple php file, but 
  * inside a directory that is NOT in the include_path nor below the web url.
  * 
  */
