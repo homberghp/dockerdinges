@@ -1,6 +1,7 @@
 <?php
 $username='exam';
-require_once './dbpassword.php';
+// use the same directory where this file resides.
+require_once __DIR__.'/dbpassword.php';
 $dbname='some_database';
 $dsn="pgsql:host=refstuff_db_1;port=5432;dbname={$dbname}";
 $options =[];

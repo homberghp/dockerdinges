@@ -1,7 +1,7 @@
 <?php
 $username='exam';
-require_once './dbpassword.php';
+require_once __DIR__.'/dbpassword.php';
 $dbname='presidents';
-$dsn="pgsql:host=refstuff_db_1;port=5432;dbname={$dbname}";
-$options =[];
-
+$dbhost='refstuff_db_1';
+$dbport=5432;
+$dboptions =[];

@@ -1,4 +1,8 @@
 = Application structure
+version 1.0 Pieter van den Hombergh
+:source-highlighter: highlightjs
+:highlightjs-theme: agate
+:highlightjs-linenums-mode: inline
 
 
 This application is composed of two services, each in its own container. +
@@ -13,7 +17,7 @@ In the docker-compose.yml file, each service is named and has its own section.
 The stuff that is under the web directory will be used as a volume te the web service and is mounted (is visible) as `/var/www` inside the resulting containner. The dedault site as defined by the standard apache configuration is [blue]`/var/www/html`, which makes the html directory that resides under the directory web visible and exposed to the (inter)net by the apache server. All files in there are potentially callable via a browser through a url.
 The file name extension will be used by the apache server to determine if the file should be passed as is or being processed, as with php files which are interpreted by the php interpreter. The resulting output will then be determined by the php logic in such file.
 
-== db 
+== db
 The stuff that is under the db directory is specific to the db service. The initdb.d directory is mounted under `/docker-entrypoint-initdb.d`, where
 it will be used (once) at the first container startup. The files in db/initdb.d are processed in lexical order, which makes it useful to ensure that the names of the files in that directory have some fixed order. Common is to prefix the files with some numbers, like in the example:
 
@@ -33,20 +37,20 @@ In this example the file is called db_settings.php.
 This file itself includes the password file in the same directory.
 This later file is small and it is best to NOT commit and push it to the repo, because this would mean that you publish your secrets, which not only sound
 stupid but really is.
-What 
+What
 
-.Settings file
+.Settings file `web/etc/db_settings.php`
 [source,php]
 ----
 include::web/etc/db_settings.php[]
 ----
 
-.password template file
+.password template file `web/etc/dbpassword.php-template`
 [source,php]
 ----
 include::web/etc/dbpassword.php-template[]
 ----
 
-This is a template file only.
-Copy it to the file without -template at the end, but make sure you do not commit that resulting file.
+This is a template file only. +
+Copy it to the file without -template at the end, but make sure you do not commit that resulting file. +
 Best is to add that file name to .gitignore.

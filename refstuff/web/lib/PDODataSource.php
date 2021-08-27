@@ -17,13 +17,13 @@ class PDODataSource {
      * Construct a datasource.
      * @param string $dbnamep name of database to connect to.
      */
-    public function __construct(string $dbnamep, int $port=5432, string $host='localhost') {
+    public function __construct(string $dbnamep) {
         require_once '../etc/db_settings.php';
         $this->username = $username;
         $this->password = $password;
         $this->dbname = $dbnamep;
-        $this->port=$port;
-        $this->host=$host;
+        $this->port=$dbport;
+        $this->host=$dbhost;
     }
 
     /**

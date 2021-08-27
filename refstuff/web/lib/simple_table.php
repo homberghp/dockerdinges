@@ -10,27 +10,39 @@
  * @param array $queryParams params to the prepared statement.
  */
 function print_simple_table(PDO $conn, string $queryText, array $queryParams, string $caption='undefined' ,string $tabledef = "<table border=1 class='simple-table'>\n") {
-    try {
+  echo simpleTableToString($conn, $queryText, $queryParams,$caption,$tabledef);
+}
+
+function simpleTableToString(PDO $conn, string $queryText, array $queryParams, string $caption='undefined' ,string $tabledef = "<table border=1 class='simple-table'>\n") : string{
+  $result='';
+  try {
         $stmt = $conn->prepare($queryText);
 
         $stmt->execute($queryParams);
-        printResultset($stmt,$caption,$tabledef);
+        $result .=resultsetToString($stmt,$caption,$tabledef);
         //</editor-fold>
     } catch (PDOException $ex) {
-        echo "<pre>got exception " . $ex->getMessage();
-        echo $ex->getTraceAsString()
-        . "</pre>"; // dump stack trace. In production, log it.
+        $result .= "<pre>got exception "
+          . $ex->getMessage()
+          .$ex->getTraceAsString()
+          . "</pre>"; // dump stack trace. In production, log it.
     }
+    return $result;
 }
-
 /**
  * print a prepared and executed statement.
 */
 function printResultset( PDOStatement $stmt, string $caption='undefined' ,string $tabledef = "<table border=1 class='simple-table'>\n"){
-  // process the result
-  //<editor-fold>
-  echo $tabledef;
-  echo "<caption>{$caption}</caption>";
+  echo resultsetToString($stmt, $caption, $tabledef);
+}
+
+/**
+ * Return result set as string, defining a  html table.
+ */
+
+function resultsetToString(PDOStatement $stmt, string $caption='undefined' ,string $tabledef = "<table border=1 class='simple-table'>\n"): string {
+  $result = $tabledef
+      . "<caption>{$caption}</caption>";
   $columnCount = $stmt->columnCount();
   $header1 = "";
   $header2 = "";
@@ -42,12 +54,12 @@ function printResultset( PDOStatement $stmt, string $caption='undefined' ,string
       $header2 .= "\t\t<th>{$column0Meta['native_type']}</th>\n";
       $colAlign[] = ($column0Meta['pdo_type'] == 1 ||$column0Meta['native_type']=='money') ? 'num' : 'txt';
   }
-  echo "{$header1}\t</tr>\n $header2\t</tr>\n";
+  $result .= "{$header1}\t</tr>\n $header2\t</tr>\n";
   while ($row = $stmt->fetch(PDO::FETCH_NUM)) {
-      printRow($row, $colAlign, $columnCount);
+      $result .= rowToString($row, $colAlign, $columnCount);
   }
-  echo "</table>\n";
-
+  $result .= "</table>\n";
+  return $result;
 }
 /**
  * Print a row of data.
@@ -56,9 +68,17 @@ function printResultset( PDOStatement $stmt, string $caption='undefined' ,string
  * @param int $columnCount count of columns
  */
 function printRow(array $row, array $colAlign, int $columnCount) {
-    echo "\t<tr>\n";
-    for ($c = 0; $c < $columnCount; $c++) {
-        echo "\t\t<td class='{$colAlign[$c]}'>{$row[$c]}</td>\n";
-    }
-    echo "\t</tr>\n";
+  echo rowToString($row, $colAlign,$columnCount);
+}
+
+/**
+ * create html row from data and alignment info.
+ */
+function rowToString(array $row, array $colAlign, int $columnCount){
+  $result="\t<tr>\n";
+  for ($c = 0; $c < $columnCount; $c++) {
+      $result .= "\t\t<td class='{$colAlign[$c]}'>{$row[$c]}</td>\n";
+  }
+    $result .= "\t</tr>\n";
+    return $result;
 }
